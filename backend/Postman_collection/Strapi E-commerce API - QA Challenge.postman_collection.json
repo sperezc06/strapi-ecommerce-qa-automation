@@ -1,0 +1,875 @@
+{
+	"info": {
+		"_postman_id": "88b726a9-faeb-4d60-b91e-8d71df9a704c",
+		"name": "Strapi E-commerce API - QA Challenge",
+		"description": "Colección de Postman para probar los endpoints de API del e-commerce.\n\nEsta colección incluye:\n- Autenticación (Login, Register)\n- Productos\n- Checkout (Validar dirección, Obtener tarifas de envío, Crear orden)\n\n**Variables de entorno requeridas:**\n- `base_url`: URL base de la API (ej: http://localhost:1337/api)\n- `jwt_token`: Token JWT obtenido después del login (se establece automáticamente)\n\n**Nota:** Todos los endpoints incluyen ejemplos de respuestas reales basados en los tests automatizados.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27096337"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.jwt) {",
+									"        pm.environment.set(\"jwt_token\", jsonData.jwt);",
+									"        pm.environment.set(\"user_id\", jsonData.user.id);",
+									"        console.log(\"JWT token guardado en variable de entorno\");",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has JWT token\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"jwt\");",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"user\");",
+									"    pm.expect(jsonData.user).to.have.property(\"id\");",
+									"    pm.expect(jsonData.user).to.have.property(\"email\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"test@example.com\",\n    \"password\": \"Test123456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/local",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"local"
+							]
+						},
+						"description": "Autentica un usuario con email y contraseña.\n\n**Body requerido:**\n- `identifier`: Email del usuario\n- `password`: Contraseña del usuario\n\n**Respuesta exitosa (200):**\n- `jwt`: Token JWT para autenticación\n- `user`: Información del usuario (id, email, username, etc.)\n\n**Respuesta de error (400/500):**\n- `error`: Mensaje de error\n- `message`: Detalles del error"
+					},
+					"response": [
+						{
+							"name": "Success - Login válido",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"identifier\": \"test@example.com\",\n    \"password\": \"Test123456!\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/local",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"local"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"jwt\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\",\n    \"user\": {\n        \"id\": 1,\n        \"username\": \"test@example.com\",\n        \"email\": \"test@example.com\",\n        \"provider\": \"local\",\n        \"confirmed\": true,\n        \"blocked\": false,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+						},
+						{
+							"name": "Error - Credenciales inválidas",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"identifier\": \"invalid@example.com\",\n    \"password\": \"wrongpassword\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/local",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"local"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": {\n        \"status\": 400,\n        \"message\": \"Invalid identifier or password\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    if (jsonData.jwt) {",
+									"        pm.environment.set(\"jwt_token\", jsonData.jwt);",
+									"        pm.environment.set(\"user_id\", jsonData.user.id);",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has JWT token\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"jwt\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"newuser@example.com\",\n    \"username\": \"newuser@example.com\",\n    \"password\": \"Test123456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/local/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"local",
+								"register"
+							]
+						},
+						"description": "Registra un nuevo usuario.\n\n**Body requerido:**\n- `name`: Nombre del usuario\n- `email`: Email del usuario\n- `username`: Username (puede ser el mismo email)\n- `password`: Contraseña del usuario\n\n**Respuesta exitosa (200):**\n- `jwt`: Token JWT para autenticación\n- `user`: Información del usuario creado"
+					},
+					"response": [
+						{
+							"name": "Success - Usuario registrado",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"newuser@example.com\",\n    \"username\": \"newuser@example.com\",\n    \"password\": \"Test123456!\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/local/register",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"local",
+										"register"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"jwt\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNjE2MjM5MDIyfQ.ExampleToken\",\n    \"user\": {\n        \"id\": 2,\n        \"username\": \"newuser@example.com\",\n        \"email\": \"newuser@example.com\",\n        \"provider\": \"local\",\n        \"confirmed\": false,\n        \"blocked\": false,\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints de autenticación"
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Get Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products?pagination[pageSize]=10&populate=thumbnail,product_variant",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "pagination[pageSize]",
+									"value": "10",
+									"description": "Número de productos por página"
+								},
+								{
+									"key": "populate",
+									"value": "thumbnail,product_variant",
+									"description": "Campos relacionados a incluir"
+								}
+							]
+						},
+						"description": "Obtiene una lista de productos.\n\n**Query parameters:**\n- `pagination[pageSize]`: Número de productos por página\n- `pagination[page]`: Número de página (opcional)\n- `populate`: Campos relacionados a incluir (thumbnail, product_variant, brand, category)\n\n**Respuesta (200):**\n- `data`: Array de productos\n- `meta`: Información de paginación"
+					},
+					"response": [
+						{
+							"name": "Success - Lista de productos",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products?pagination[pageSize]=10&populate=thumbnail,product_variant",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "pagination[pageSize]",
+											"value": "10"
+										},
+										{
+											"key": "populate",
+											"value": "thumbnail,product_variant"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": [\n        {\n            \"id\": 1,\n            \"attributes\": {\n                \"name\": \"Nike Air Max 90\",\n                \"slug\": \"nike-air-max-90\",\n                \"description\": \"The Nike Air Max 90 stays true to its OG running roots\",\n                \"price\": 129.99,\n                \"thumbnail\": {\n                    \"data\": {\n                        \"id\": 1,\n                        \"attributes\": {\n                            \"url\": \"/uploads/nike_air_max_90.jpg\"\n                        }\n                    }\n                },\n                \"product_variant\": {\n                    \"data\": []\n                },\n                \"brand\": {\n                    \"data\": {\n                        \"id\": 1,\n                        \"attributes\": {\n                            \"name\": \"Nike\"\n                        }\n                    }\n                },\n                \"category\": {\n                    \"data\": {\n                        \"id\": 1,\n                        \"attributes\": {\n                            \"name\": \"Sneakers\"\n                        }\n                    }\n                }\n            }\n        }\n    ],\n    \"meta\": {\n        \"pagination\": {\n            \"page\": 1,\n            \"pageSize\": 10,\n            \"pageCount\": 1,\n            \"total\": 1\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product by Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/nike-air-max-90?populate=images,product_variant,brand,category",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"nike-air-max-90"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "images,product_variant,brand,category",
+									"description": "Campos relacionados a incluir"
+								}
+							]
+						},
+						"description": "Obtiene el detalle de un producto por su slug.\n\n**Path parameter:**\n- `product_slug`: Slug del producto (ej: nike-air-max-90)\n  - Puedes cambiar el valor en la variable `{{product_slug}}` o reemplazarlo directamente en la URL\n  - Ejemplo: `nike-air-max-90`, `adidas-superstar`, etc.\n\n**Query parameters:**\n- `populate`: Campos relacionados a incluir\n\n**Respuesta (200):**\n- `data`: Objeto con el producto completo\n\n**Respuesta (404):**\n- `error`: Mensaje de error si el producto no existe\n\n**Nota:** Para obtener un slug válido, primero ejecuta \"Get Products\" y copia el slug de uno de los productos."
+					},
+					"response": [
+						{
+							"name": "Success - Producto encontrado",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/nike-air-max-90?populate=images,product_variant,brand,category",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"nike-air-max-90"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "images,product_variant,brand,category"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"id\": 1,\n        \"attributes\": {\n            \"name\": \"Nike Air Max 90\",\n            \"slug\": \"nike-air-max-90\",\n            \"description\": \"The Nike Air Max 90 stays true to its OG running roots\",\n            \"price\": 129.99,\n            \"images\": {\n                \"data\": []\n            },\n            \"product_variant\": {\n                \"data\": []\n            },\n            \"brand\": {\n                \"data\": {\n                    \"id\": 1,\n                    \"attributes\": {\n                        \"name\": \"Nike\"\n                    }\n                }\n            },\n            \"category\": {\n                \"data\": {\n                    \"id\": 1,\n                    \"attributes\": {\n                        \"name\": \"Sneakers\"\n                    }\n                }\n            }\n        }\n    }\n}"
+						},
+						{
+							"name": "Error - Producto no encontrado",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products/non-existent-product-slug-12345",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products",
+										"non-existent-product-slug-12345"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": {\n        \"status\": 404,\n        \"message\": \"Not found\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products?filters[name][$contains]=nike&populate=thumbnail,product_variant",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "filters[name][$contains]",
+									"value": "nike",
+									"description": "Término de búsqueda"
+								},
+								{
+									"key": "populate",
+									"value": "thumbnail,product_variant"
+								}
+							]
+						},
+						"description": "Busca productos por nombre.\n\n**Query parameters:**\n- `filters[name][$contains]`: Término de búsqueda\n- `populate`: Campos relacionados a incluir\n\n**Respuesta (200):**\n- `data`: Array de productos que coinciden con la búsqueda"
+					},
+					"response": [
+						{
+							"name": "Success - Productos encontrados",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/products?filters[name][$contains]=nike&populate=thumbnail,product_variant",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "filters[name][$contains]",
+											"value": "nike"
+										},
+										{
+											"key": "populate",
+											"value": "thumbnail,product_variant"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": [\n        {\n            \"id\": 1,\n            \"attributes\": {\n                \"name\": \"Nike Air Max 90\",\n                \"slug\": \"nike-air-max-90\",\n                \"price\": 129.99\n            }\n        }\n    ],\n    \"meta\": {\n        \"pagination\": {\n            \"page\": 1,\n            \"pageSize\": 25,\n            \"pageCount\": 1,\n            \"total\": 1\n        }\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints de productos"
+		},
+		{
+			"name": "Checkout",
+			"item": [
+				{
+					"name": "Validate Address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"street1\": \"123 Test Street\",\n    \"city\": \"San Francisco\",\n    \"state\": \"CA\",\n    \"zip\": \"94102\",\n    \"country\": \"US\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/checkout/validate-address",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"checkout",
+								"validate-address"
+							]
+						},
+						"description": "Valida una dirección de envío.\n\n**Body requerido:**\n- `street1`: Dirección (calle y número)\n- `city`: Ciudad\n- `state`: Estado/Provincia (código de 2 letras para US)\n- `zip`: Código postal\n- `country`: Código de país (ej: US)\n\n**Respuesta (200):**\n- Dirección válida (puede retornar objeto con datos validados o simplemente success)\n\n**Respuesta (400/422):**\n- Error de validación si la dirección es inválida\n\n**Nota:** Este endpoint puede usar un servicio externo (EasyPost) o retornar un mock si no está configurado."
+					},
+					"response": [
+						{
+							"name": "Success - Dirección válida",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"street1\": \"123 Test Street\",\n    \"city\": \"San Francisco\",\n    \"state\": \"CA\",\n    \"zip\": \"94102\",\n    \"country\": \"US\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders/checkout/validate-address",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"checkout",
+										"validate-address"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"valid\": true,\n    \"message\": \"Address validated successfully\"\n}"
+						},
+						{
+							"name": "Error - Dirección inválida",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"street1\": \"\",\n    \"city\": \"\",\n    \"state\": \"\",\n    \"zip\": \"invalid\",\n    \"country\": \"\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders/checkout/validate-address",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"checkout",
+										"validate-address"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"error\": {\n        \"status\": 400,\n        \"message\": \"Invalid address\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Shipping Rates",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": {\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"phone_number\": \"+1234567890\",\n        \"street_address\": \"123 Main St\",\n        \"country\": \"US\",\n        \"state\": \"CA\",\n        \"city\": \"Los Angeles\",\n        \"zip_code\": \"90001\"\n    },\n    \"parcel\": {\n        \"width\": 10,\n        \"length\": 10,\n        \"height\": 5,\n        \"weight\": 1\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/checkout/shipping-rate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders",
+								"checkout",
+								"shipping-rate"
+							]
+						},
+						"description": "Obtiene las tarifas de envío disponibles.\n\n**Body requerido:**\n- `address`: Información de dirección de envío\n  - `name`: Nombre completo (requerido)\n  - `email`: Email (opcional)\n  - `phone_number`: Teléfono (opcional)\n  - `street_address`: Dirección completa (requerido)\n  - `country`: Código de país (ej: \"US\") (requerido)\n  - `state`: Estado/Provincia (código de 2 letras para US) (requerido)\n  - `city`: Ciudad (requerido)\n  - `zip_code`: Código postal (requerido)\n- `parcel`: Información del paquete (requerido)\n  - `width`: Ancho (pulgadas)\n  - `length`: Largo (pulgadas)\n  - `height`: Alto (pulgadas)\n  - `weight`: Peso (onzas)\n\n**Respuesta (200):**\n- `id`: ID del shipment\n- `rates`: Array con las tarifas de envío disponibles\n\n**Respuesta (400):**\n- Error: \"Address and parcel data are required\" si faltan datos\n\n**Respuesta (500):**\n- Error si hay problema con el servicio de envío\n\n**Nota:** Este endpoint puede usar un servicio externo (EasyPost) o retornar tarifas mock si no está configurado."
+					},
+					"response": [
+						{
+							"name": "Success - Tarifas de envío",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"address\": {\n        \"name\": \"Test User\",\n        \"email\": \"test@example.com\",\n        \"phone_number\": \"+1234567890\",\n        \"street_address\": \"123 Test Street\",\n        \"country\": \"US\",\n        \"state\": \"CA\",\n        \"city\": \"San Francisco\",\n        \"zip_code\": \"94102\"\n    },\n    \"parcel\": {\n        \"length\": 10,\n        \"width\": 10,\n        \"height\": 5,\n        \"weight\": 1\n    }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders/checkout/shipping-rate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"checkout",
+										"shipping-rate"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"rates\": [\n        {\n            \"id\": \"rate_1\",\n            \"service\": \"USPS Priority\",\n            \"rate\": \"10.50\",\n            \"currency\": \"USD\",\n            \"estimated_days\": 2\n        },\n        {\n            \"id\": \"rate_2\",\n            \"service\": \"USPS Express\",\n            \"rate\": \"25.00\",\n            \"currency\": \"USD\",\n            \"estimated_days\": 1\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Verificar que existe el JWT token",
+									"if (!pm.environment.get(\"jwt_token\")) {",
+									"    console.warn(\"JWT token no encontrado. Por favor ejecuta el request de Login primero.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"pm.test(\"Response has order data\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an(\"object\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"items\": [\n        {\n            \"id\": 1,\n            \"image\": \"http://localhost:1337/uploads/product.png\",\n            \"display_name\": \"Nike Air Max 90\",\n            \"product_name\": \"Nike Air Max 90\",\n            \"variant_id\": null,\n            \"variant_name\": null,\n            \"price\": 129.99,\n            \"qty\": 1\n        }\n    ],\n    \"shipping\": {\n        \"id\": \"rate_1\",\n        \"id_rate\": \"rate_1\",\n        \"name\": \"Standard Shipping\",\n        \"price\": \"10.00\"\n    },\n    \"customer\": {\n        \"name\": \"Test User\",\n        \"email\": \"test@example.com\",\n        \"phone_number\": \"+1234567890\",\n        \"street_address\": \"123 Test Street\",\n        \"country\": \"US\",\n        \"state\": \"CA\",\n        \"city\": \"San Francisco\",\n        \"zip_code\": \"94102\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"orders"
+							]
+						},
+						"description": "Crea una nueva orden (checkout completo).\n\n**Requiere autenticación:** Sí (JWT token en header Authorization)\n\n**Body requerido:**\n- `items`: Array de productos en el carrito\n  - `id`: ID del producto\n  - `image`: URL de la imagen del producto\n  - `display_name`: Nombre para mostrar (ej: \"Nike Air Max 90\")\n  - `product_name`: Nombre del producto\n  - `variant_id`: ID de la variante (puede ser null)\n  - `variant_name`: Nombre de la variante (puede ser null)\n  - `price`: Precio del producto\n  - `qty`: Cantidad\n- `shipping`: Información del servicio de envío seleccionado\n  - `id`: ID del servicio de envío\n  - `id_rate`: ID de la tarifa\n  - `name`: Nombre del servicio (ej: \"Standard Shipping\")\n  - `price`: Precio del envío (string)\n- `customer`: Información del cliente y dirección de envío\n  - `name`: Nombre completo\n  - `email`: Email\n  - `phone_number`: Teléfono\n  - `street_address`: Dirección completa\n  - `country`: Código de país (ej: \"US\")\n  - `state`: Estado/Provincia\n  - `city`: Ciudad\n  - `zip_code`: Código postal\n\n**Respuesta (200/201):**\n- `data`: Objeto con la orden creada\n- `url`: URL de pago (Stripe o página de transacción local)\n\n**Respuesta (400):**\n- Error si faltan datos requeridos:\n  - \"items data is missing\"\n  - \"shipping data is missing\"\n  - \"customer data is missing\"\n\n**Respuesta (401/403):**\n- Error si no está autenticado (aunque puede estar configurado como público para testing)"
+					},
+					"response": [
+						{
+							"name": "Success - Orden creada",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwt_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"items\": [\n        {\n            \"id\": 1,\n            \"image\": \"http://localhost:1337/uploads/product.png\",\n            \"display_name\": \"Nike Air Max 90\",\n            \"product_name\": \"Nike Air Max 90\",\n            \"variant_id\": null,\n            \"variant_name\": null,\n            \"price\": 129.99,\n            \"qty\": 1\n        }\n    ],\n    \"shipping\": {\n        \"id\": \"rate_1\",\n        \"id_rate\": \"rate_1\",\n        \"name\": \"Standard Shipping\",\n        \"price\": \"10.00\"\n    },\n    \"customer\": {\n        \"name\": \"Test User\",\n        \"email\": \"test@example.com\",\n        \"phone_number\": \"+1234567890\",\n        \"street_address\": \"123 Test Street\",\n        \"country\": \"US\",\n        \"state\": \"CA\",\n        \"city\": \"San Francisco\",\n        \"zip_code\": \"94102\"\n    }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"id\": 1,\n        \"attributes\": {\n            \"order_id\": \"ORD-12345\",\n            \"total\": 139.99,\n            \"status\": \"pending\",\n            \"products\": {\n                \"data\": [\n                    {\n                        \"id\": 1,\n                        \"attributes\": {\n                            \"product\": {\n                                \"data\": {\n                                    \"id\": 1,\n                                    \"attributes\": {\n                                        \"name\": \"Nike Air Max 90\",\n                                        \"price\": 129.99\n                                    }\n                                }\n                            },\n                            \"qty\": 1,\n                            \"price\": 129.99\n                        }\n                    }\n                ]\n            },\n            \"customer_contact\": {\n                \"name\": \"Test User\",\n                \"email\": \"test@example.com\",\n                \"phone\": \"+1234567890\"\n            },\n            \"shipping_address\": {\n                \"street1\": \"123 Test Street\",\n                \"city\": \"San Francisco\",\n                \"state\": \"CA\",\n                \"zip\": \"94102\",\n                \"country\": \"US\"\n            },\n            \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n        }\n    },\n    \"url\": \"/transaction/1?secret=abc123\"\n}"
+						},
+						{
+							"name": "Error - Sin autenticación",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"items\": []\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": null,\n    \"error\": {\n        \"status\": 400,\n        \"name\": \"BadRequestError\",\n        \"message\": \"items data is missing\",\n        \"details\": {}\n    }\n}"
+						},
+						{
+							"name": "Error - Sin productos",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{jwt_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"items\": [],\n    \"shipping\": {\n        \"id\": \"rate_1\",\n        \"id_rate\": \"rate_1\",\n        \"name\": \"Standard Shipping\",\n        \"price\": \"10.00\"\n    },\n    \"customer\": {\n        \"name\": \"Test User\",\n        \"email\": \"test@example.com\",\n        \"phone_number\": \"+1234567890\",\n        \"street_address\": \"123 Test Street\",\n        \"country\": \"US\",\n        \"state\": \"CA\",\n        \"city\": \"San Francisco\",\n        \"zip_code\": \"94102\"\n    }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/orders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": null,\n    \"error\": {\n        \"status\": 400,\n        \"name\": \"BadRequestError\",\n        \"message\": \"items data is missing\",\n        \"details\": {}\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints de checkout"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:1337/api",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_slug",
+			"value": "nike-air-max-90",
+			"type": "string",
+			"description": "Slug del producto. Puedes cambiarlo por cualquier slug válido."
+		}
+	]
+}
