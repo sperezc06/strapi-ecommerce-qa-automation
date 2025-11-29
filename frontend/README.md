@@ -101,11 +101,23 @@ npm run test
 ```
 Runs all tests (API + E2E) in headless mode using Chromium.
 
+#### Run only API tests
+```bash
+npm run test:api
+```
+Runs only API tests (`tests/api/`) in headless mode. Fast execution since no browser is needed.
+
 #### Run E2E tests in headed mode (visible browser)
 ```bash
 npm run test:headed
 ```
 Runs only E2E tests (`tests/e2e/`) with visible browser, useful for visual debugging.
+
+#### Run all tests (API headless + E2E headed)
+```bash
+npm run test:all
+```
+Runs API tests in headless mode first, then E2E tests with visible browser. Best of both worlds - fast API tests and visual E2E debugging.
 
 #### Generate Allure report
 ```bash
@@ -224,7 +236,9 @@ npm run start        # Start production server
 
 # Tests
 npm run test         # Run all tests (headless)
+npm run test:api     # Run only API tests
 npm run test:headed  # Run E2E tests with visible browser
+npm run test:all     # Run API (headless) + E2E (headed)
 
 # Reports
 npm run test:allure:generate  # Generate Allure report

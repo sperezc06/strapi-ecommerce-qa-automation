@@ -11,8 +11,10 @@
 		"lintfix": "npm run prettier && npm run lint:js -- --fix",
 		"lint": "next lint",
 		"test": "playwright test --project=chromium",
+		"test:api": "playwright test tests/api --project=chromium",
 		"test:headed": "playwright test tests/e2e --headed --project=chromium",
-		"test:allure:generate": "allure generate allure-results --clean -o allure-report",
+		"test:all": "playwright test tests/api --project=chromium && playwright test tests/e2e --headed --project=chromium",
+		"test:allure:generate": "allure generate allure-results --clean -o allure-report && rm -rf allure-results/*",
 		"test:allure:open": "allure open allure-report"
 	},
 	"dependencies": {

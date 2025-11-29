@@ -1,7 +1,6 @@
 # E-commerce QA Automation Project
 
 Complete e-commerce testing project with Next.js frontend and Strapi backend.
-
 ## Project Structure
 
 ```
@@ -32,11 +31,17 @@ strapi-ecommerce-project/
 3. **Run Tests:**
    ```bash
    cd frontend
-   # Run tests in headless mode (fast)
+   # Run all tests (API + E2E) in headless mode (fast)
    npm run test
    
-   # Run E2E tests in headed mode (browser visible, for debugging)
+   # Run only API tests (no browser needed, very fast)
+   npm run test:api
+   
+   # Run only E2E tests in headed mode (browser visible, for debugging)
    npm run test:headed
+   
+   # Run all tests: API (headless) + E2E (headed browser visible)
+   npm run test:all
    ```
 
 4. **Generate Allure Report:**
