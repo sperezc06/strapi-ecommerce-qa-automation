@@ -28,9 +28,8 @@ export async function login(page: Page, user: TestUser = TEST_USER): Promise<voi
     
     try {
       await page.waitForURL(/\/profile/, { timeout: 15000 });
-      return; // Login successful
+      return;
     } catch {
-      // Retry on failure
       if (attempt < 2) {
         await page.waitForTimeout(2000);
         await page.reload({ waitUntil: 'networkidle' });
@@ -41,7 +40,7 @@ export async function login(page: Page, user: TestUser = TEST_USER): Promise<voi
   await page.waitForURL(/\/profile/, { timeout: 30000 });
 }
 
-// Clears localStorage before page loads and after
+// Clears localStorage before and after page loads
 export async function clearLocalStorage(page: Page): Promise<void> {
   await page.addInitScript(() => localStorage.clear());
   await page.evaluate(() => localStorage.clear()).catch(() => {});
@@ -92,7 +91,7 @@ export const SELECTORS = {
   productLink: 'a[href*="/product/"]',
 };
 
-// Common timeouts (in milliseconds)
+// Common timeouts in milliseconds
 export const TIMEOUTS = {
   short: 2000,
   medium: 5000,

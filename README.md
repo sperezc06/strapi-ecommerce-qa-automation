@@ -16,9 +16,14 @@ strapi-ecommerce-project/
    cd backend
    npm install --legacy-peer-deps
    npm install sqlite3
-   # Configure .env file
+   # Copy initial database (includes test data)
+   mkdir -p .tmp
+   cp database/initial/data.db .tmp/data.db
+   # Configure .env file if needed
    npm run develop
    ```
+   
+   **Note:** See `backend/SETUP.md` for detailed setup instructions and troubleshooting.
 
 2. **Setup Frontend:**
    ```bash

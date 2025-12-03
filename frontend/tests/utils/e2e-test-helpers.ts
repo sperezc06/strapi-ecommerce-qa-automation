@@ -1,7 +1,7 @@
 import { Page, TestInfo } from '@playwright/test';
 import { test } from '@playwright/test';
 
-// Captures API responses matching the pattern for reporting
+// Captures API responses during E2E tests for reporting
 export function setupApiCapture(page: Page, endpointPattern: string | RegExp, description?: string) {
   const responses: any[] = [];
   const handler = async (response: any) => {
@@ -11,7 +11,6 @@ export function setupApiCapture(page: Page, endpointPattern: string | RegExp, de
       try {
         const status = response.status();
         let body: any;
-        // Try to parse as JSON, fallback to text
         try {
           body = await response.json();
         } catch {
@@ -41,7 +40,7 @@ export function setupApiCapture(page: Page, endpointPattern: string | RegExp, de
   };
 }
 
-// Wrapper for test.step to hide internal Playwright actions in reports
+// Wrapper for test.step to hide internal Playwright actions in Allure reports
 export async function step<T>(name: string, fn: () => Promise<T>): Promise<T> {
   return test.step(name, fn, { box: true });
 }
@@ -54,7 +53,6 @@ export async function takeScreenshot(
   description?: string,
   locator?: any
 ): Promise<void> {
-  // Clear any previous highlights
   await page.evaluate(() => {
     const highlighted = document.querySelectorAll('[style*="outline"], [style*="box-shadow"]');
     highlighted.forEach((el: any) => {
@@ -65,7 +63,6 @@ export async function takeScreenshot(
     });
   }).catch(() => {});
   
-  // Highlight element if provided
   if (locator) {
     try {
       if (typeof locator.highlight === 'function') {
@@ -81,12 +78,10 @@ export async function takeScreenshot(
     } catch {}
   }
   
-  // Take screenshot and attach to report
   const screenshot = await page.screenshot({ fullPage: true, timeout: 5000 }).catch(() => null);
   if (!screenshot) return;
   await testInfo.attach(description || name, { body: screenshot, contentType: 'image/png' });
   
-  // Clear highlight after screenshot
   if (locator) {
     try {
       await locator.evaluate((el: HTMLElement) => {

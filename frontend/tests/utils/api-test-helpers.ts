@@ -12,7 +12,9 @@ export async function attachApiResponse(
   requestData?: any,
   response?: any
 ) {
+  // Attach request information to Allure report
   await test.step(`Request: ${method} ${endpoint}`, async () => {
+    // Attach request body as formatted JSON
     if (requestData) {
       await testInfo.attach('Request Body', {
         body: JSON.stringify(requestData, null, 2),
@@ -20,6 +22,7 @@ export async function attachApiResponse(
       });
     }
     
+    // Attach request metadata (method and endpoint)
     await testInfo.attach('Request Details', {
       body: `Method: ${method}\nEndpoint: ${endpoint}`,
       contentType: 'text/plain',
@@ -31,7 +34,7 @@ export async function attachApiResponse(
     const statusText = response.statusText();
     let body: any;
     
-    // Parse response body (JSON or text)
+    // Parse response: try JSON first, fallback to text, then error message
     try {
       body = await response.json();
     } catch {
@@ -42,7 +45,9 @@ export async function attachApiResponse(
       }
     }
 
+    // Attach response information to Allure report
     await test.step(`Response: ${status} ${statusText}`, async () => {
+      // Attach formatted JSON response body
       await testInfo.attach('Response Body (JSON)', {
         body: JSON.stringify(body, null, 2),
         contentType: 'application/json',
